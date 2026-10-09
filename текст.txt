@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Token | BNB Testnet</title>
+  <style>
+    body {
+      background: #101522;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px 16px;
+    }
+    .card {
+      max-width: 360px;
+      margin: 30px auto;
+      padding: 24px;
+      background: #1d2638;
+      border-radius: 20px;
+    }
+    .logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 12px;
+      background: #4d79ff;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    #status {
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img
+      class="logo"
+      src="https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Tether_USDT.png/200px-Tether_USDT.png"
+      alt="Token logo"
+    >
+
+    <h2>Test USD Token</h2>
+    <p>BNB Smart Chain Testnet</p>
+    <p>Демонстрационный токен, не официальный USDT.</p>
+
+    <button onclick="openMetaMask()">
+      Открыть MetaMask
+    </button>
+
+    <button onclick="connectWallet()">
+      Подключить кошелёк
+    </button>
+
+    <button onclick="addToken()">
+      Добавить тестовый токен
+    </button>
+
+    <p id="status">Готово</p>
+  </div>
+
+<script>
+  const TOKEN_ADDRESS =
+    "0x4978c837B9d045CE029cDDA5F07e18f62A64d7a1";
+
+  const TOKEN_IMAGE =
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Tether_USDT.png/200px-Tether_USDT.png";
+
+  const CHAIN_ID = "0x61";
+
+  function status(message) {
+    document.getElementById("status").textContent = message;
+  }
+
+  function openMetaMask() {
+    if (!window.location.host) {
+      status("Сначала опубликуй сайт на HTTPS.");
+      return;
+    }
+
+    const page =
+      window.location.host +
+      window.location.pathname +
+      window.location.search;
+
+    window.location.href =
+      "https://metamask.app.link/dapp/" + page;
+  }
+
+  async function connectWallet() {
+    if (!window.ethereum) {
+      status("Открой сайт во встроенном браузере MetaMask.");
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "eth_requestAccounts"
+      });
+
+      status("Кошелёк подключён.");
+    } catch (error) {
+      status("Ошибка подключения: " + error.message);
+    }
+  }
+
+  async function addToken() {
+    if (!window.ethereum) {
+      status("Открой сайт во встроенном браузере MetaMask.");
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "eth_requestAccounts"
+      });
+
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: CHAIN_ID }]
+        });
+      } catch (error) {
+        if (error.code !== 4902) throw error;
+
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: CHAIN_ID,
+            chainName: "BNB Smart Chain Testnet",
+            nativeCurrency: {
+              name: "tBNB",
+              symbol: "tBNB",
+              decimals: 18
+            },
+            rpcUrls: [
+              "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
+            ],
+            blockExplorerUrls: [
+              "https://testnet.bscscan.com/"
+            ]
+          }]
+        });
+      }
+
+      const result = await window.ethereum.request({
+        method: "wallet_watchAsset",
+        params: {
+          type: "ERC20",
+          options: {
+            address: TOKEN_ADDRESS,
+            symbol: "TEST",
+            decimals: 18,
+            image: TOKEN_IMAGE
+          }
+        }
+      });
+
+      status(
+        result
+          ? "MetaMask принял запрос. Проверь токен."
+          : "Запрос отменён."
+      );
+    } catch (error) {
+      status("Ошибка: " + error.message);
+    }
+  }
+</script>
+</body>
+</html>
